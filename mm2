@@ -4,7 +4,7 @@ loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "Murder Mystery 2 | Summer GUI",
+    Name = "Murder Mystery 2 | Voltron's Summer GUI",
     LoadingTitle = "Loading...",
     LoadingSubtitle = "Key System Enabled",
     ConfigurationSaving = {
