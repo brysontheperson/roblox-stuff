@@ -4,7 +4,7 @@ loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "Murder Mystery 2 | Voltron's Summer GUI",
+    Name = "Murder Mystery 2 | Summer GUI",
     LoadingTitle = "Loading...",
     LoadingSubtitle = "Key System Enabled",
     ConfigurationSaving = {
@@ -16,28 +16,24 @@ local Window = Rayfield:CreateWindow({
     KeySystem = true,
     KeySettings = {
         Title = "MM2 | Summer GUI Key",
-        Subtitle = "Key System",
-        Note = "Get the key by clicking the button below.",
+        Subtitle = "Enter your key to continue",
+        Note = "Click 'Get Key' to open the key page.",
         FileName = "MM2KeySave",
         SaveKey = true,
-        GrabKeyFromSite = false,
+        GrabKeyFromSite = true, -- ✅ this shows the "Get Key" button
         Key = { "DSgEsHjtrJTRfgjYTFGJ" },
-        KeyInputFinished = function(Key)
-            print("Correct Key Entered:", Key)
-        end,
-        IncorrectKey = function(Key)
-            print("Wrong Key:", Key)
-        end,
         KeyGrabber = function()
+            -- This will be triggered when they click the "Get Key" button
             setclipboard("https://link-center.net/1172605/cCrJvCxM7JIG")
             Rayfield:Notify({
-                Title = "Key Copied",
-                Content = "The link to get your key was copied to your clipboard!",
+                Title = "Key Link Copied!",
+                Content = "The key site link has been copied to your clipboard.",
                 Duration = 6
             })
         end
     }
 })
+
 
 
 local MainTab = Window:CreateTab("Main", 4483362458)
