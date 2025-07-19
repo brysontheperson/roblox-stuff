@@ -17,24 +17,21 @@ local Window = Rayfield:CreateWindow({
     KeySettings = {
         Title = "MM2 | Summer GUI Key",
         Subtitle = "Enter your key to continue",
-        Note = "Click 'Get Key' to open the key page.",
+        Note = "Click 'Get Key' to copy the site link.",
         FileName = "MM2KeySave",
         SaveKey = true,
-        GrabKeyFromSite = true, -- ✅ this shows the "Get Key" button
+        GrabKeyFromSite = true, -- ✅ shows the "Get Key" button
         Key = { "DSgEsHjtrJTRfgjYTFGJ" },
         KeyGrabber = function()
-            -- This will be triggered when they click the "Get Key" button
             setclipboard("https://link-center.net/1172605/cCrJvCxM7JIG")
             Rayfield:Notify({
                 Title = "Key Link Copied!",
-                Content = "The key site link has been copied to your clipboard.",
+                Content = "The key site has been copied to your clipboard.",
                 Duration = 6
             })
         end
     }
 })
-
-
 
 local MainTab = Window:CreateTab("Main", 4483362458)
 
@@ -82,7 +79,7 @@ MainTab:CreateButton({
     end,
 })
 
--- Time in game label (Rayfield doesn't support dynamic text natively, so use a notification)
+-- Time Played Notification
 task.spawn(function()
     local startTime = tick()
     while true do
@@ -97,7 +94,7 @@ task.spawn(function()
     end
 end)
 
--- Farming logic copied from your script
+-- Farming Logic
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
