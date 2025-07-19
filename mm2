@@ -1,184 +1,230 @@
--- Load Rayfield UI
-loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-
-local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-
-local Window = Rayfield:CreateWindow({
-    Name = "Murder Mystery 2 | Summer GUI",
-    LoadingTitle = "Loading...",
-    LoadingSubtitle = "Key System Enabled",
-    ConfigurationSaving = {
-        Enabled = false
-    },
-    Discord = {
-        Enabled = false
-    },
-    KeySystem = true,
-    KeySettings = {
-        Title = "MM2 | Summer GUI Key",
-        Subtitle = "Enter your key to continue",
-        Note = "Click 'Get Key' to copy the site link.",
-        FileName = "MM2KeySave",
-        SaveKey = true,
-        GrabKeyFromSite = true, -- ✅ shows the "Get Key" button
-        Key = { "DSgEsHjtrJTRfgjYTFGJ" },
-        KeyGrabber = function()
-            setclipboard("https://link-center.net/1172605/cCrJvCxM7JIG")
-            Rayfield:Notify({
-                Title = "Key Link Copied!",
-                Content = "The key site has been copied to your clipboard.",
-                Duration = 6
-            })
-        end
-    }
-})
-
-local MainTab = Window:CreateTab("Main", 4483362458)
-
-local autoFarmEnabled = false
-local autoResetEnabled = false
-local disableRenderEnabled = false
-local antiAFKUsed = false
-
--- Toggle: Auto Farm
-MainTab:CreateToggle({
-    Name = "Auto Farm Coins",
-    CurrentValue = false,
-    Callback = function(Value)
-        autoFarmEnabled = Value
-    end,
-})
-
--- Toggle: Auto Reset
-MainTab:CreateToggle({
-    Name = "Auto Reset",
-    CurrentValue = false,
-    Callback = function(Value)
-        autoResetEnabled = Value
-    end,
-})
-
--- Toggle: Disable Render
-MainTab:CreateToggle({
-    Name = "Disable 3D Rendering",
-    CurrentValue = false,
-    Callback = function(Value)
-        disableRenderEnabled = Value
-        game:GetService("RunService"):Set3dRenderingEnabled(not Value)
-    end,
-})
-
--- Button: Anti-AFK
-MainTab:CreateButton({
-    Name = "Enable Anti-AFK",
-    Callback = function()
-        if not antiAFKUsed then
-            antiAFKUsed = true
-            loadstring(game:HttpGet("https://pastebin.com/raw/bwP4bmed"))()
-        end
-    end,
-})
-
--- Time Played Notification
-task.spawn(function()
-    local startTime = tick()
-    while true do
-        local delta = math.floor(tick() - startTime)
-        local d, h, m, s = math.floor(delta / 86400), math.floor(delta % 86400 / 3600), math.floor(delta % 3600 / 60), delta % 60
-        Rayfield:Notify({
-            Title = "Play Time",
-            Content = string.format("Time in game: %dd %02dh %02dm %02ds", d, h, m, s),
-            Duration = 5
-        })
-        task.wait(60)
-    end
-end)
-
--- Farming Logic
+--// SERVICES
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualUser = game:GetService("VirtualUser")
-local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
-local CoinCollected = ReplicatedStorage.Remotes.Gameplay.CoinCollected
-local RoundStart = ReplicatedStorage.Remotes.Gameplay.RoundStart
-local RoundEnd = ReplicatedStorage.Remotes.Gameplay.RoundEndFade
+--// CONFIG
+local keyRequired = "DSgEsHjtrJTRfgjYTFGJ"
+local keyLink = "https://link-center.net/1172605/cCrJvCxM7JIG"
 
-local farming = false
-local bag_full = false
-local resetting = false
-local start_position = nil
+--// BASIC KEY GUI
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+screenGui.Name = "KeyGUI"
 
-player.Idled:Connect(function()
-    VirtualUser:CaptureController()
-    VirtualUser:ClickButton2(Vector2.new())
+local frame = Instance.new("Frame", screenGui)
+frame.Size = UDim2.new(0, 320, 0, 160)
+frame.Position = UDim2.new(0.5, -160, 0.5, -80)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+
+local title = Instance.new("TextLabel", frame)
+title.Text = "Enter Key to Unlock GUI"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.BackgroundTransparency = 1
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.new(0, 0, 0, 10)
+
+local inputBox = Instance.new("TextBox", frame)
+inputBox.PlaceholderText = "Enter Key Here"
+inputBox.Font = Enum.Font.Gotham
+inputBox.TextSize = 14
+inputBox.Text = ""
+inputBox.TextColor3 = Color3.new(1, 1, 1)
+inputBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+inputBox.Size = UDim2.new(0.9, 0, 0, 35)
+inputBox.Position = UDim2.new(0.05, 0, 0, 50)
+Instance.new("UICorner", inputBox).CornerRadius = UDim.new(0, 6)
+
+local submitBtn = Instance.new("TextButton", frame)
+submitBtn.Text = "Submit Key"
+submitBtn.Font = Enum.Font.GothamBold
+submitBtn.TextSize = 14
+submitBtn.TextColor3 = Color3.new(1, 1, 1)
+submitBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
+submitBtn.Size = UDim2.new(0.42, 0, 0, 30)
+submitBtn.Position = UDim2.new(0.05, 0, 1, -40)
+Instance.new("UICorner", submitBtn).CornerRadius = UDim.new(0, 6)
+
+local getKeyBtn = Instance.new("TextButton", frame)
+getKeyBtn.Text = "Get Key Site"
+getKeyBtn.Font = Enum.Font.GothamBold
+getKeyBtn.TextSize = 14
+getKeyBtn.TextColor3 = Color3.new(1, 1, 1)
+getKeyBtn.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+getKeyBtn.Size = UDim2.new(0.42, 0, 0, 30)
+getKeyBtn.Position = UDim2.new(0.53, 0, 1, -40)
+Instance.new("UICorner", getKeyBtn).CornerRadius = UDim.new(0, 6)
+
+--// GET KEY BUTTON ACTION
+getKeyBtn.MouseButton1Click:Connect(function()
+    setclipboard(keyLink)
+    getKeyBtn.Text = "Copied!"
+    task.wait(2)
+    getKeyBtn.Text = "Get Key Site"
 end)
 
-local function getCharacter() return player.Character or player.CharacterAdded:Wait() end
-local function getHRP() return getCharacter():WaitForChild("HumanoidRootPart") end
+--// SUBMIT KEY BUTTON ACTION
+submitBtn.MouseButton1Click:Connect(function()
+    if inputBox.Text == keyRequired then
+        -- Destroy the key UI
+        screenGui:Destroy()
 
-CoinCollected.OnClientEvent:Connect(function(_, current, max)
-    if current == max and not resetting and autoResetEnabled then
-        resetting = true
-        bag_full = true
-        local hrp = getHRP()
-        if start_position then
-            local tween = TweenService:Create(hrp, TweenInfo.new(2, Enum.EasingStyle.Linear), {CFrame = start_position})
-            tween:Play()
-            tween.Completed:Wait()
-        end
-        task.wait(0.5)
-        player.Character.Humanoid.Health = 0
-        player.CharacterAdded:Wait()
-        task.wait(1.5)
-        resetting = false
-        bag_full = false
-    end
-end)
+        -- Load Rayfield GUI
+        loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+        local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
-RoundStart.OnClientEvent:Connect(function()
-    farming = true
-    start_position = getHRP().CFrame
-end)
+        local Window = Rayfield:CreateWindow({
+            Name = "Murder Mystery 2 | Summer GUI",
+            LoadingTitle = "Loading...",
+            LoadingSubtitle = "Enjoy!",
+            ConfigurationSaving = {
+                Enabled = false
+            }
+        })
 
-RoundEnd.OnClientEvent:Connect(function()
-    farming = false
-end)
+        local MainTab = Window:CreateTab("Main", 4483362458)
 
-local function get_nearest_coin()
-    local hrp = getHRP()
-    local closest, dist = nil, math.huge
-    for _, m in pairs(workspace:GetChildren()) do
-        if m:FindFirstChild("CoinContainer") then
-            for _, coin in pairs(m.CoinContainer:GetChildren()) do
-                if coin:IsA("BasePart") and coin:FindFirstChild("TouchInterest") then
-                    local d = (hrp.Position - coin.Position).Magnitude
-                    if d < dist then closest, dist = coin, d end
+        local autoFarmEnabled = false
+        local autoResetEnabled = false
+        local disableRenderEnabled = false
+        local antiAFKUsed = false
+
+        MainTab:CreateToggle({
+            Name = "Auto Farm Coins",
+            CurrentValue = false,
+            Callback = function(Value)
+                autoFarmEnabled = Value
+            end,
+        })
+
+        MainTab:CreateToggle({
+            Name = "Auto Reset",
+            CurrentValue = false,
+            Callback = function(Value)
+                autoResetEnabled = Value
+            end,
+        })
+
+        MainTab:CreateToggle({
+            Name = "Disable 3D Rendering",
+            CurrentValue = false,
+            Callback = function(Value)
+                disableRenderEnabled = Value
+                game:GetService("RunService"):Set3dRenderingEnabled(not Value)
+            end,
+        })
+
+        MainTab:CreateButton({
+            Name = "Enable Anti-AFK",
+            Callback = function()
+                if not antiAFKUsed then
+                    antiAFKUsed = true
+                    loadstring(game:HttpGet("https://pastebin.com/raw/bwP4bmed"))()
                 end
-            end
-        end
-    end
-    return closest, dist
-end
+            end,
+        })
 
-task.spawn(function()
-    while true do
-        if autoFarmEnabled and farming and not bag_full then
-            local coin, dist = get_nearest_coin()
-            if coin then
+        task.spawn(function()
+            local startTime = tick()
+            while true do
+                local delta = math.floor(tick() - startTime)
+                local d, h, m, s = math.floor(delta / 86400), math.floor(delta % 86400 / 3600), math.floor(delta % 3600 / 60), delta % 60
+                Rayfield:Notify({
+                    Title = "Play Time",
+                    Content = string.format("Time in game: %dd %02dh %02dm %02ds", d, h, m, s),
+                    Duration = 5
+                })
+                task.wait(60)
+            end
+        end)
+
+        -- Farming logic
+        local CoinCollected = game:GetService("ReplicatedStorage").Remotes.Gameplay.CoinCollected
+        local RoundStart = game:GetService("ReplicatedStorage").Remotes.Gameplay.RoundStart
+        local RoundEnd = game:GetService("ReplicatedStorage").Remotes.Gameplay.RoundEndFade
+
+        local farming = false
+        local bag_full = false
+        local resetting = false
+        local start_position = nil
+
+        player.Idled:Connect(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end)
+
+        local function getCharacter() return player.Character or player.CharacterAdded:Wait() end
+        local function getHRP() return getCharacter():WaitForChild("HumanoidRootPart") end
+
+        CoinCollected.OnClientEvent:Connect(function(_, current, max)
+            if current == max and not resetting and autoResetEnabled then
+                resetting = true
+                bag_full = true
                 local hrp = getHRP()
-                if dist > 150 then
-                    hrp.CFrame = coin.CFrame
-                else
-                    local tween = TweenService:Create(hrp, TweenInfo.new(dist / 20, Enum.EasingStyle.Linear), {CFrame = coin.CFrame})
+                if start_position then
+                    local tween = TweenService:Create(hrp, TweenInfo.new(2, Enum.EasingStyle.Linear), {CFrame = start_position})
                     tween:Play()
-                    repeat task.wait() until not coin:FindFirstChild("TouchInterest") or not farming or not autoFarmEnabled
-                    tween:Cancel()
+                    tween.Completed:Wait()
+                end
+                task.wait(0.5)
+                player.Character.Humanoid.Health = 0
+                player.CharacterAdded:Wait()
+                task.wait(1.5)
+                resetting = false
+                bag_full = false
+            end
+        end)
+
+        RoundStart.OnClientEvent:Connect(function()
+            farming = true
+            start_position = getHRP().CFrame
+        end)
+
+        RoundEnd.OnClientEvent:Connect(function()
+            farming = false
+        end)
+
+        local function get_nearest_coin()
+            local hrp = getHRP()
+            local closest, dist = nil, math.huge
+            for _, m in pairs(workspace:GetChildren()) do
+                if m:FindFirstChild("CoinContainer") then
+                    for _, coin in pairs(m.CoinContainer:GetChildren()) do
+                        if coin:IsA("BasePart") and coin:FindFirstChild("TouchInterest") then
+                            local d = (hrp.Position - coin.Position).Magnitude
+                            if d < dist then closest, dist = coin, d end
+                        end
+                    end
                 end
             end
+            return closest, dist
         end
-        task.wait(0.2)
+
+        task.spawn(function()
+            while true do
+                if autoFarmEnabled and farming and not bag_full then
+                    local coin, dist = get_nearest_coin()
+                    if coin then
+                        local hrp = getHRP()
+                        if dist > 150 then
+                            hrp.CFrame = coin.CFrame
+                        else
+                            local tween = TweenService:Create(hrp, TweenInfo.new(dist / 20, Enum.EasingStyle.Linear), {CFrame = coin.CFrame})
+                            tween:Play()
+                            repeat task.wait() until not coin:FindFirstChild("TouchInterest") or not farming or not autoFarmEnabled
+                            tween:Cancel()
+                        end
+                    end
+                end
+                task.wait(0.2)
+            end
+        end)
+    else
+        submitBtn.Text = "Wrong Key"
+        task.wait(1.5)
+        submitBtn.Text = "Submit Key"
     end
 end)
