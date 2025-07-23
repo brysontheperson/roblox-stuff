@@ -1,0 +1,1 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/brysontheperson/roblox-stuff/refs/heads/main/mm2",true))()
